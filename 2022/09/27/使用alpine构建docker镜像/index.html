@@ -24,7 +24,7 @@
 <meta property="og:description" content="最近的工作中，我使用Golang开发了一个web项目，并准备通过流水线的方式做持续集成与发布。在这是用过程中遇到了一些技术与问题包括：通过make构建golang程序、dockerfile不能访问父级目录、使用Alpine作为基础来制作我的容器镜像 通过Makefile打包Golang程序什么是Makefile 代码变成可执行文件，叫做编译（compile）；先编译这个，还是先编译那个（即编译的安">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2022-09-27T03:21:51.000Z">
-<meta property="article:modified_time" content="2022-09-27T07:21:10.521Z">
+<meta property="article:modified_time" content="2022-09-27T07:26:38.239Z">
 <meta property="article:author" content="MangK">
 <meta property="article:tag" content="Docker">
 <meta property="article:tag" content="Alpine">
@@ -295,14 +295,14 @@
 <figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs docker">docker build -t name:tag  -f deploy/Dockerfile ./deploy<br></code></pre></td></tr></table></figure>
 <p><code>-f</code>选项指定了Dockerfile所在的目录，最后的<code>./deploy</code>是docker构建使用的根目录</p>
 <h1 id="使用Alpine作为基础来制作我的容器镜像"><a href="#使用Alpine作为基础来制作我的容器镜像" class="headerlink" title="使用Alpine作为基础来制作我的容器镜像"></a>使用Alpine作为基础来制作我的容器镜像</h1><h2 id="Docker打包出的镜像超过1G让我不能接受"><a href="#Docker打包出的镜像超过1G让我不能接受" class="headerlink" title="Docker打包出的镜像超过1G让我不能接受"></a>Docker打包出的镜像超过1G让我不能接受</h2><p>在项目刚写完的时候，我使用golang官网的docker镜像作为基础来构建我自己的镜像。这样做可以不用担心环境问题，打包golang构建docker一气呵成固然方便，但当我看到我的镜像有1.2G大的时候猛打了一个寒颤～这是在超出我的所料。<br>作为追求精简的程序员，这种情况不允许发生在我的项目里，于是便有了下面的内容</p>
-<h2 id="Alpine镜像是什么"><a href="#Alpine镜像是什么" class="headerlink" title="Alpine镜像是什么"></a>Alpine镜像是什么</h2><blockquote>
+<h3 id="Alpine镜像是什么"><a href="#Alpine镜像是什么" class="headerlink" title="Alpine镜像是什么"></a>Alpine镜像是什么</h3><blockquote>
 <p>Alpine 操作系统是一个面向安全的轻型 Linux 发行版。它不同于通常 Linux 发行版，Alpine 采用了 musl libc(注意这里，是个坑) 和 busybox 以减小系统的体积和运行时资源消耗，但功能上比 busybox 又完善的多，因此得到开源社区越来越多的青睐。在保持瘦身的同时，Alpine 还提供了自己的包管理工具 apk，可以通过 <a target="_blank" rel="noopener" href="https://pkgs.alpinelinux.org/packages">https://pkgs.alpinelinux.org/packages</a> 网站上查询包信息，也可以直接通过 apk 命令直接查询和安装各种软件。</p>
 </blockquote>
-<h2 id="将golang编译与docker打包拆分"><a href="#将golang编译与docker打包拆分" class="headerlink" title="将golang编译与docker打包拆分"></a>将golang编译与docker打包拆分</h2><p>为了尽可能的减小docker镜像的体积，我采用了只将golang可执行文件与config文件打包进镜像的方案（大家可以制作自己的打包服务器或者直接使用各种CI&#x2F;CD流水线来帮助构建镜像）。在这之后，我的小而美的docker镜像中只存在两个必要文件<code>app(可执行文件) &amp; config.yaml</code>。而我的镜像也变成了精简的49MB</p>
-<h2 id="制作镜像时遇到的问题"><a href="#制作镜像时遇到的问题" class="headerlink" title="制作镜像时遇到的问题"></a>制作镜像时遇到的问题</h2><p>可是当我使用镜像构建容器的时候，却总是提示</p>
+<h3 id="将golang编译与docker打包拆分"><a href="#将golang编译与docker打包拆分" class="headerlink" title="将golang编译与docker打包拆分"></a>将golang编译与docker打包拆分</h3><p>为了尽可能的减小docker镜像的体积，我采用了只将golang可执行文件与config文件打包进镜像的方案（大家可以制作自己的打包服务器或者直接使用各种CI&#x2F;CD流水线来帮助构建镜像）。在这之后，我的小而美的docker镜像中只存在两个必要文件<code>app(可执行文件) &amp; config.yaml</code>。而我的镜像也变成了精简的49MB</p>
+<h3 id="制作镜像时遇到的问题"><a href="#制作镜像时遇到的问题" class="headerlink" title="制作镜像时遇到的问题"></a>制作镜像时遇到的问题</h3><p>可是当我使用镜像构建容器的时候，却总是提示</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">➜  project git:(dev) docker run -it --rm 351b4d544b4e<br>exec /app/app: no such file or directory<br></code></pre></td></tr></table></figure>
 <p>开始很没头绪，因为使用了阿里云的流水线服务所以我还特意发了工单去询问（这显得我很白痴）。后来我通过<code>docker save imageID &gt; filename.tar</code>的方式将镜像下载到本地，然后解压去查找对应的文件，发现<code>/app/app</code>可执行文件就好好的躺在它该在的目录。这时候我才把目光转向了我的基础镜像。于是发现并解决了如下问题(部分内容引用自<a target="_blank" rel="noopener" href="https://mozillazg.com/2020/03/use-alpine-image-common-issues.rst.html">使用Alpine作为基础镜像时可能会遇到的常见问题的解决方法</a>)：</p>
-<h2 id="镜像中存在可执行文件但是报错no-such-file-or-directory"><a href="#镜像中存在可执行文件但是报错no-such-file-or-directory" class="headerlink" title="镜像中存在可执行文件但是报错no such file or directory"></a>镜像中存在可执行文件但是报错no such file or directory</h2><p>由于golang构建与docker基于alpine打包分开<br>我的二进制文件是使用动态链接方式编译了一个使用了GLIBC库的程序生成的，但是alpne镜像中没有GLIBC库而是用的MUSL LIBC库，这样就会导致该二进制文件无法被执行。<br>解决方案一般有两种：</p>
+<h4 id="镜像中存在可执行文件但是报错no-such-file-or-directory"><a href="#镜像中存在可执行文件但是报错no-such-file-or-directory" class="headerlink" title="镜像中存在可执行文件但是报错no such file or directory"></a>镜像中存在可执行文件但是报错no such file or directory</h4><p>由于golang构建与docker基于alpine打包分开<br>我的二进制文件是使用动态链接方式编译了一个使用了GLIBC库的程序生成的，但是alpne镜像中没有GLIBC库而是用的MUSL LIBC库，这样就会导致该二进制文件无法被执行。<br>解决方案一般有两种：</p>
 <blockquote>
 <ul>
 <li>改为静态编译</li>
@@ -310,7 +310,7 @@
 </ul>
 </blockquote>
 <p>追求精简的我选择了第一种<a target="_blank" rel="noopener" href="https://juejin.cn/post/7053450610386468894">静态编译</a><br>同时也实测简单的指定<code>CGO_ENABLED=0</code>并不完全解决问题</p>
-<h2 id="alpine时区问题"><a href="#alpine时区问题" class="headerlink" title="alpine时区问题"></a>alpine时区问题</h2><p>有些使用 alpine 作为基础镜像的 go 程序镜像可能会出现类似下面这样的错误:</p>
+<h4 id="alpine时区问题"><a href="#alpine时区问题" class="headerlink" title="alpine时区问题"></a>alpine时区问题</h4><p>有些使用 alpine 作为基础镜像的 go 程序镜像可能会出现类似下面这样的错误:</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs shell">panic: open /usr/local/go/lib/time/zoneinfo.zip: no such file or directory<br><br>Init mysql error: unknown time zone Asia/Shanghai<br></code></pre></td></tr></table></figure>
 <p>常见原因：alpine 基础镜像中没有包含时区信息文件，当代码中有调用类似下面这样的通过名称获取时区信息的时候，就会出现上面的错误。<br>所以需要我们在构建镜像是安装自己需要的时区文件,之后就不会存在时区问题了</p>
 <figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Dockerfile"><span class="hljs-keyword">FROM</span> alpine:latest<br><br><span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /app</span><br><br><span class="hljs-keyword">ENV</span> TZ Asia/Shanghai<br><span class="hljs-keyword">RUN</span><span class="language-bash"> apk update &amp;&amp; apk add tzdata</span><br><span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">cp</span> /usr/share/zoneinfo/<span class="hljs-variable">$&#123;TZ&#125;</span> /etc/localtime \</span><br><span class="language-bash">    &amp;&amp; <span class="hljs-built_in">echo</span> <span class="hljs-variable">$&#123;TZ&#125;</span> &gt; /etc/timezone</span><br>...<br></code></pre></td></tr></table></figure>
