@@ -17,15 +17,6 @@
 
 <p>More info: <a href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 ]]></content>
-      <categories>
-        <category>Afjdlsk</category>
-        <category>发的卡里就分开了</category>
-      </categories>
-      <tags>
-        <tag>Init</tag>
-        <tag>Hello</tag>
-        <tag>终于实现了</tag>
-      </tags>
   </entry>
   <entry>
     <title>使用alpine构建Docker镜像</title>
