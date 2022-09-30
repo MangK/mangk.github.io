@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>docker swarm集群的使用</title>
+    <url>/2022/09/30/docker-swarm%E9%9B%86%E7%BE%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
+    <content><![CDATA[<h2 id="序"><a href="#序" class="headerlink" title="序"></a>序</h2><p>咱们书接<a href="/2022/09/27/%E4%BD%BF%E7%94%A8alpine%E6%9E%84%E5%BB%BAdocker%E9%95%9C%E5%83%8F/">上回</a>，我搞定了golang程序的编译，搞定了docker镜像的打包，搞定了流水线。现在项目部署与热更新成了我要面对的问题。<br>受制于公司提供的部署环境（只提供给我一台主机，主机上有docker），我暂时没有k8s集群可用，但又希望能完成基于流水线的自动部署、热更新和不停机更新。所以返现了下面要说的<code>docker swarm</code></p>
+<h2 id="什么是-swarm-mode"><a href="#什么是-swarm-mode" class="headerlink" title="什么是 swarm mode"></a>什么是 swarm mode</h2>]]></content>
+      <tags>
+        <tag>Docker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Hello World</title>
     <url>/2022/09/20/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
@@ -21,7 +30,7 @@
   <entry>
     <title>使用alpine构建Docker镜像</title>
     <url>/2022/09/27/%E4%BD%BF%E7%94%A8alpine%E6%9E%84%E5%BB%BAdocker%E9%95%9C%E5%83%8F/</url>
-    <content><![CDATA[<p>最近的工作中，我使用Golang开发了一个web项目，并准备通过流水线的方式做持续集成与发布。在这是用过程中遇到了一些技术与问题包括：<a href="#%E9%80%9A%E8%BF%87Makefile%E6%89%93%E5%8C%85Golang%E7%A8%8B%E5%BA%8F">通过make构建golang程序</a>、<a href="#Dockerfile%E4%B8%8D%E8%83%BD%E8%AE%BF%E9%97%AE%E7%88%B6%E7%BA%A7%E7%9B%AE%E5%BD%95">dockerfile不能访问父级目录</a>、<a href="#%E4%BD%BF%E7%94%A8Alpine%E4%BD%9C%E4%B8%BA%E5%9F%BA%E7%A1%80%E6%9D%A5%E5%88%B6%E4%BD%9C%E6%88%91%E7%9A%84%E5%AE%B9%E5%99%A8%E9%95%9C%E5%83%8F">使用Alpine作为基础来制作我的容器镜像</a></p>
+    <content><![CDATA[<h2 id="序"><a href="#序" class="headerlink" title="序"></a>序</h2><p>最近的工作中，我使用Golang开发了一个web项目，并准备通过流水线的方式做持续集成与发布。在这是用过程中遇到了一些技术与问题包括：<a href="#%E9%80%9A%E8%BF%87Makefile%E6%89%93%E5%8C%85Golang%E7%A8%8B%E5%BA%8F">通过make构建golang程序</a>、<a href="#Dockerfile%E4%B8%8D%E8%83%BD%E8%AE%BF%E9%97%AE%E7%88%B6%E7%BA%A7%E7%9B%AE%E5%BD%95">dockerfile不能访问父级目录</a>、<a href="#%E4%BD%BF%E7%94%A8Alpine%E4%BD%9C%E4%B8%BA%E5%9F%BA%E7%A1%80%E6%9D%A5%E5%88%B6%E4%BD%9C%E6%88%91%E7%9A%84%E5%AE%B9%E5%99%A8%E9%95%9C%E5%83%8F">使用Alpine作为基础来制作我的容器镜像</a></p>
 <h1 id="通过Makefile打包Golang程序"><a href="#通过Makefile打包Golang程序" class="headerlink" title="通过Makefile打包Golang程序"></a>通过Makefile打包Golang程序</h1><h2 id="什么是Makefile"><a href="#什么是Makefile" class="headerlink" title="什么是Makefile"></a>什么是Makefile</h2><blockquote>
 <p>代码变成可执行文件，叫做编译（compile）；先编译这个，还是先编译那个（即编译的安排），叫做构建（build）。Make是最常用的构建工具，诞生于1977年，主要用于C语言的项目。但是实际上，任何只要某个文件有变化，就要重新构建的项目，都可以用Make构建。</p>
 <p>关于make命令这里不做深入介绍，引用链接提供介绍清晰明了的直通车（让我们感谢大神🙏）<br><a href="https://www.ruanyifeng.com/blog/2015/02/make.html">阮一峰的网络日志-Make命令教程</a></p>
@@ -36,6 +45,7 @@
 <p>平时使用docker build一般是在根目录存在Dockerfile，构建的时候Dockerfile会在当前目录寻找需要的文件，但是在我的目录结构中，Dockerfile被放到了deploy目录下，导致我在根目录执行docker build会找不到file，但是cd到deploy目录里又会导致Dockerfile找不到根目录的文件。所以这里<code>-f</code>选项就可以使用了：</p>
 <figure class="highlight docker"><table><tr><td class="code"><pre><code class="hljs docker">docker build -t name:tag  -f deploy/Dockerfile ./deploy<br></code></pre></td></tr></table></figure>
 <p><code>-f</code>选项指定了Dockerfile所在的目录，最后的<code>./deploy</code>是docker构建使用的根目录</p>
+<h2 id="向Dockerfile中传递编译参数"><a href="#向Dockerfile中传递编译参数" class="headerlink" title="向Dockerfile中传递编译参数"></a>向Dockerfile中传递编译参数</h2><p>通过<code>-build-arg &#123;ARG_NAME&#125;=&#123;value&#125;</code>可以传递参数，那么在dockerfile中，通过<code>arg</code> 定义的变量可以接收到传递到参数<code>ARG ARG_NAME=hello</code></p>
 <h1 id="使用Alpine作为基础来制作我的容器镜像"><a href="#使用Alpine作为基础来制作我的容器镜像" class="headerlink" title="使用Alpine作为基础来制作我的容器镜像"></a>使用Alpine作为基础来制作我的容器镜像</h1><h2 id="Docker打包出的镜像超过1G让我不能接受"><a href="#Docker打包出的镜像超过1G让我不能接受" class="headerlink" title="Docker打包出的镜像超过1G让我不能接受"></a>Docker打包出的镜像超过1G让我不能接受</h2><p>在项目刚写完的时候，我使用golang官网的docker镜像作为基础来构建我自己的镜像。这样做可以不用担心环境问题，打包golang构建docker一气呵成固然方便，但当我看到我的镜像有1.2G大的时候猛打了一个寒颤～这是在超出我的所料。<br>作为追求精简的程序员，这种情况不允许发生在我的项目里，于是便有了下面的内容</p>
 <h2 id="Alpine镜像是什么"><a href="#Alpine镜像是什么" class="headerlink" title="Alpine镜像是什么"></a>Alpine镜像是什么</h2><blockquote>
 <p>Alpine 操作系统是一个面向安全的轻型 Linux 发行版。它不同于通常 Linux 发行版，Alpine 采用了 musl libc(注意这里，是个坑) 和 busybox 以减小系统的体积和运行时资源消耗，但功能上比 busybox 又完善的多，因此得到开源社区越来越多的青睐。在保持瘦身的同时，Alpine 还提供了自己的包管理工具 apk，可以通过 <a href="https://pkgs.alpinelinux.org/packages">https://pkgs.alpinelinux.org/packages</a> 网站上查询包信息，也可以直接通过 apk 命令直接查询和安装各种软件。</p>
