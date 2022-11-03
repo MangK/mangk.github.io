@@ -4,6 +4,56 @@
   
   
   <entry>
+    <title>Golang GUI开发总结</title>
+    <link href="/2022/11/03/Golang-GUI%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    <url>/2022/11/03/Golang-GUI%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/</url>
+    
+    <content type="html"><![CDATA[<ul><li><a href="https://github.com/ying32/govcl">govcl</a></li><li><a href="https://github.com/fyne-io/fyne">fyne</a></li><li><a href="https://github.com/wailsapp/wails">wails</a></li><li><a href="https://github.com/lxn/walk">walk</a></li><li><a href="https://www.wxwidgets.org/">wxwidgets</a></li><li><a href="https://github.com/webview/webview">webview</a></li></ul>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Golang</tag>
+      
+      <tag>GUI</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>Golang构建桌面程序之webview</title>
+    <link href="/2022/11/03/Golang%E6%9E%84%E5%BB%BA%E6%A1%8C%E9%9D%A2%E7%A8%8B%E5%BA%8F%E4%B9%8Bwebview/"/>
+    <url>/2022/11/03/Golang%E6%9E%84%E5%BB%BA%E6%A1%8C%E9%9D%A2%E7%A8%8B%E5%BA%8F%E4%B9%8Bwebview/</url>
+    
+    <content type="html"><![CDATA[<h2 id="序"><a href="#序" class="headerlink" title="序"></a>序</h2><p>最近接到的任务是开发一个可以在mac和windows上运行的程序，作为一个golang程序员首先想到的自然是golang。跨平台编译运行也让他可以做这件事。结合前面我了解到的一些框架（<a href="https://github.com/ying32/govcl">govcl</a>,<a href="https://github.com/fyne-io/fyne">fyne</a>,<a href="https://github.com/wailsapp/wails">wails</a>,<a href="https://github.com/lxn/walk">walk</a>,<a href="https://www.wxwidgets.org/">wxwidgets</a>），考虑学习的时间成本我本来是想用<a href="https://github.com/fyne-io/fyne">fyne</a>来做。直到后来我找到了这个能更快完成需求的包<a href="https://github.com/webview/webview">webview</a>。所以今天主要来介绍<a href="https://github.com/webview/webview">webview</a>这个可以跨平台生成可执行文件的框架。</p><h2 id="Golang-的-webview-package"><a href="#Golang-的-webview-package" class="headerlink" title="Golang 的 webview package"></a>Golang 的 webview package</h2>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>Golang</tag>
+      
+      <tag>webview</tag>
+      
+      <tag>embed</tag>
+      
+      <tag>vue</tag>
+      
+      <tag>gin</tag>
+      
+      <tag>GUI</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>docker swarm集群的使用</title>
     <link href="/2022/09/30/docker-swarm%E9%9B%86%E7%BE%A4%E7%9A%84%E4%BD%BF%E7%94%A8/"/>
     <url>/2022/09/30/docker-swarm%E9%9B%86%E7%BE%A4%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
